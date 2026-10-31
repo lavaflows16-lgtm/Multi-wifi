@@ -75,8 +75,15 @@ class Socks5Proxy(private val pool: NetworkPool, private val port: Int = 1080) {
 
             reply(output, 0)
 
-            val r = remote
-            exec.execute { pipe(r.getInputStream(), client.getOutputStream()); closeQuietly(r, client) }
+            val r = remote ?: run {
+                reply(output, 4)
+                return
+            }
+
+            exec.execute {
+                pipe(r.getInputStream(), client.getOutputStream())
+                closeQuietly(r, client)
+            }
             pipe(client.getInputStream(), r.getOutputStream())
             closeQuietly(r, client)
         } catch (e: IOException) {
